@@ -25,18 +25,9 @@ if prompt := st.chat_input():
     )
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
-    response = client.responses.create(
+    response = client.chat.completions.create(
         model = selected_model,
-        messages = [
-            {
-                "role": "assistant",
-                "content": "You are a helpful assistant."
-            },
-            {
-                "role": "user",
-                "content": "Explain what a Dungeons and Dragons is"
-            }
-        ]
+        messages = []
     )
 
     msg = response.choices[0].message.content
