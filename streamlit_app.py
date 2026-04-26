@@ -41,7 +41,6 @@ if prompt := st.chat_input():
     st.chat_message("assistant").write(msg)
 
 
-
 with st.expander("Show file uploader"):
     file_uploader = st.file_uploader(
         "Upload images or Excel files", accept_multiple_files = True, type=["xlsx", "jpg", "png", "pdf"]
@@ -52,7 +51,7 @@ with st.expander("Show file uploader"):
             if uploaded_file.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
-                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state["chat_history"]):
+                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state.messages):
                     
                     with st.spinner(f"Przetwarzanie {uploaded_file.name}..."):
                         try:
@@ -60,7 +59,7 @@ with st.expander("Show file uploader"):
                             pdf_text = load_pdf(uploaded_file)
                             
                             # Dodanie do historii sesji
-                            st.session_state["chat_history"].append({
+                            st.session_state.messages.append({
                                 "role": "system",
                                 "content": f"Context from {uploaded_file.name}: {pdf_text}",
                                 "file_name": uploaded_file.name
@@ -73,8 +72,8 @@ with st.expander("Show file uploader"):
                 st.info(f"Plik {uploaded_file.name} wykryty, ale obsługa PDF jest priorytetem.")
 
 # Podgląd tego, co siedzi w sesji
-if st.session_state["chat_history"]:
+if st.session_state.messages:
     st.write("### Zawartość sesji (Skrót):")
-    for item in st.session_state["chat_history"]:
-        st.text(f"📄 {item['file_name']}: {item['content'][:100]}...")
+    for item in st.session_state.messages:
+        st.text(f"{item['file_name']}: {item['content'][:100]}...")
 
