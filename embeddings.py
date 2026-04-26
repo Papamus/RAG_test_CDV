@@ -14,11 +14,11 @@ class FAISSIndex:
             results.append(self.metadata[idx])
         return results
 
-embed_model_id = ... # nazwa modelu
+embed_model_id = "google/embeddinggemma-300m" # nazwa modelu
 model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
-    embeddings = ... # załadowanie modelu embeddingowego
+    embeddings = HuggingFaceEmbeddings(model_name = embed_model_id) # załadowanie modelu embeddingowego
     texts = ... # wartości tekstowe wszystkich dokumentów
     metadata = ... # metadane wszystkich dokumentów, czyli słownik {filename:... , text:...}
 
