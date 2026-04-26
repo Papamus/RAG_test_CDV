@@ -36,10 +36,13 @@ if prompt := st.chat_input():
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
 
-file_uploader = st.file_uploader(
-    "Upload images/files", accept_multiple_files = True, type=None
-)
-for upload_files in file_uploader:
-    if upload_files is not None:
-        stringio = StringIO(upload_files.getvalue().decode("utf-8"))
-        st.write(stringio)
+
+with st.expander("Show file uploader"):
+    file_uploader = st.file_uploader(
+        "Upload images/files", accept_multiple_files = True, type=None
+    )
+    for upload_files in file_uploader:
+        if upload_files is not None:
+            stringio = StringIO(upload_files.getvalue().decode("utf-8"))
+            st.write(stringio)
+
