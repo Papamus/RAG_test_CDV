@@ -35,7 +35,7 @@ if prompt := st.chat_input():
     st.chat_message("assistant").write(msg)
 
 file_uploader = st.file_uploader(
-    "Upload images/files", accept_multiple_files = True, type=["jpg", "png"]
+    "Upload images/files", accept_multiple_files = True, type=None
 )
 for upload_files in file_uploader:
     st.image(upload_files)
