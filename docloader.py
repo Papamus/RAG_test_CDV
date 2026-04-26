@@ -10,5 +10,8 @@ def load_pdf(doc_file):
     doc.close()
     return text
 
-# def load_docs_from_folder(folder_path):
-#     documents = ""
+def load_docs_from_folder(folder_path):
+    documents = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".pdf"):
+            text = load_pdf(os.path.join(folder_path))
