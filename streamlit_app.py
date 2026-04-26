@@ -48,7 +48,7 @@ with st.expander("Show file uploader"):
 
     if file_uploader:
         for uploaded_files in file_uploader:
-            if uploaded_file.name.lower().endswith(".pdf"):
+            if uploaded_files.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
                 if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state.messages):
