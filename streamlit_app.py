@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from io import StringIO
 from openai import OpenAI
-from docloader import load_pdf
+from docloader import load_pdf, load_docs_from_folder
 import os
 
 st.set_page_config(layout="wide", page_title="Gemini chatbot app")

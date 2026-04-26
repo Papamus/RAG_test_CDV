@@ -14,4 +14,8 @@ def load_docs_from_folder(folder_path):
     documents = []
     for filename in os.listdir(folder_path):
         if filename.endswith(".pdf"):
-            text = load_pdf(os.path.join(folder_path))
+            text = load_pdf(os.path.join(folder_path, filename))
+        with open(full_path, "rb") as f:
+                text = load_pdf(f)
+                documents.append({"file_name": filename, "content": text})
+    return documents
