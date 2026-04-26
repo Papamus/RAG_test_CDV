@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+from io import StringIO
 from openai import OpenAI
 import os
 
@@ -38,4 +40,6 @@ file_uploader = st.file_uploader(
     "Upload images/files", accept_multiple_files = True, type=None
 )
 for upload_files in file_uploader:
-    st.image(upload_files)
+    if upload_files is not None:
+        stringio = StringIO(upload_files.getvalue().decode("utf-8"))
+        st.write(stringio)
