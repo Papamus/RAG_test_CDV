@@ -47,7 +47,7 @@ with st.expander("Show file uploader"):
     )
 
     if file_uploader:
-        for upload_files in file_uploader:
+        for uploaded_files in file_uploader:
             if uploaded_file.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
@@ -73,7 +73,8 @@ with st.expander("Show file uploader"):
 
 # Podgląd tego, co siedzi w sesji
 if st.session_state.messages:
-    st.write("### Zawartość sesji (Skrót):")
+    st.write("Zawartość sesji (Skrót):")
     for item in st.session_state.messages:
-        st.text(f"{item['file_name']}: {item['content'][:100]}...")
+        if "file_name" in item:
+            st.text(f"{item['file_name']}: {item['content'][:100]}...")
 
