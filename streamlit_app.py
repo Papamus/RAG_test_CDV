@@ -7,6 +7,9 @@ import os
 st.set_page_config(layout="wide", page_title="Gemini chatbot app")
 st.title("Gemini chatbot app")
 
+with st.popover("Basic chatbot info"):
+    st.text("Chatbot made for explaining D&D rules!")
+    st.checkbox("Done!")
 # api_key, base_url = os.environ["API_KEY"], os.environ["BASE_URL"]
 api_key, base_url = st.secrets["API_KEY"], st.secrets["BASE_URL"]
 selected_model = "gemini-2.5-flash"
@@ -35,6 +38,7 @@ if prompt := st.chat_input():
     msg = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
+
 
 
 with st.expander("Show file uploader"):
