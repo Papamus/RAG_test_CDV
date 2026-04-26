@@ -26,7 +26,7 @@ if prompt := st.chat_input():
         model = selected_model,
         messages = [
             {
-                "role": "system",
+                "role": "assistant",
                 "content": "You are a helpful assistant."
             },
             {
