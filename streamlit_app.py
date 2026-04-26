@@ -33,3 +33,9 @@ if prompt := st.chat_input():
     msg = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": msg})
     st.chat_message("assistant").write(msg)
+
+file_uploader = st.file_uploader(
+    "Upload images/files", accept_multiple_files = True, type=["jpg", "png"]
+)
+for upload_files in file_uploader:
+    st.image(upload_files)
