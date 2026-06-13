@@ -71,7 +71,7 @@ with st.expander("Show file uploader"):
                                 st.session_state["documents_db"].append({
                                     "role": "system",
                                     "file_name": f"{uploaded_file.name} (cz. {idx+1})",
-                                    "text": f"Context from {uploaded_file.name}: {chunk}",
+                                    "content": f"Context from {uploaded_file.name}: {chunk}",
                                 })
                             new_files_added = True
                             st.success(f"Dodano: {uploaded_file.name}")

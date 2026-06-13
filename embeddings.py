@@ -19,7 +19,7 @@ model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
     embeddings = HuggingFaceEmbeddings(model_name = embed_model_id, model_kwargs=model_kwargs) # załadowanie modelu embeddingowego
-    texts = [doc["text"] for doc in documents] # wartości tekstowe wszystkich dokumentów
+    texts = [doc['content'] for doc in documents] # wartości tekstowe wszystkich dokumentów
     metadata = documents
     embeddings_matrix = [embeddings.embed_query(text) for text in texts]
     embeddings_matrix = np.array(embeddings_matrix).astype("float32")
