@@ -89,19 +89,16 @@ with st.expander("Show file uploader"):
                     st.error(f"Błąd podczas tworzenia indeksu wektorowego: {e}")
 
 # Podgląd tego, co siedzi w sesji
-tab1, tab2 = st.tabs(["Historia czatu", "Baza dokumentów"])
-with tab1:
+    if st.session_state["documents_db"]:
+        for item in st.session_state["documents_db"]:
+            # Wyświetlamy nazwę chunka i jego początek
+            st.text(f"{item['file_name']}: {item['content'][:100]}...")
+    else:
+        st.info("Baza wiedzy jest pusta. Wgraj pliki PDF, aby wygenerować wektory.")
     if st.session_state.messages:
         st.write("Zawartość sesji (Skrót):")
         for item in st.session_state.messages:
             if "file_name" in item:
                 st.text(f"{item['file_name']}: {item['content'][:100]}...")
-
-with tab2:
-    if st.session_state["documents_db"]:
-        for item in st.session_state["documents_db"]:
-            # Wyświetlamy nazwę chunka i jego początek
-            st.text(f"📄 {item['file_name']}: {item['content'][:100]}...")
-    else:
-        st.info("Baza wiedzy jest pusta. Wgraj pliki PDF, aby wygenerować wektory.")
+   
 
