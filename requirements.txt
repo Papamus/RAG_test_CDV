@@ -3,3 +3,4 @@ streamlit
 pandas
 pymupdf
 faiss-cpu
+langchain_huggingface
