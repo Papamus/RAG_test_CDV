@@ -4,3 +4,4 @@ pandas
 pymupdf
 faiss-cpu
 langchain_huggingface
+sentence-transformer
