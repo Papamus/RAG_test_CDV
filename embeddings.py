@@ -19,19 +19,19 @@ model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
     embeddings = HuggingFaceEmbeddings(model_name = embed_model_id) # załadowanie modelu embeddingowego
-    texts = ... # wartości tekstowe wszystkich dokumentów
-    metadata = ... # metadane wszystkich dokumentów, czyli słownik {filename:... , text:...}
-
+    texts = [doc.content for doc in documents] # wartości tekstowe wszystkich dokumentów
+    metadata = [{"filename": doc["file_name"], "text": doc["content"]} for doc in documents]
     embeddings_matrix = [embeddings.embed_query(text) for text in texts]
     embeddings_matrix = np.array(embeddings_matrix).astype("float32")
 
-    index = faiss....# ustawienie indeksu przeszukwania
+    matrix_dim = embeddings_matrix.shape[1]
+    index = faiss.IndexFlatL2(matrix_dim)# ustawienie indeksu przeszukwania
     index.add(embeddings_matrix)
 
     return FAISSIndex(index, metadata)
 
 def retrieve_docs(query, faiss_index, k=3):
-    embeddings = ... # załadowanie modelu embeddingowego
-    query_embedding = ... # embeddowanie zapytania (query)
-    results = ... # zwrócenie wyników przeuszkiwania
+    embeddings = HuggingFaceEmbeddings(model_name=embed_model_id,model_kwargs=model_kwargs)# załadowanie modelu embeddingowego
+    query_embedding = np.array[(embeddings.embed_query(query).astype("float32"))] # embeddowanie zapytania (query)
+    results = faiss_index.similarity_search(query_embedding, k=k) # zwrócenie wyników przeuszkiwania
     return results
