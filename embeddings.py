@@ -14,7 +14,7 @@ class FAISSIndex:
             results.append(self.metadata[idx])
         return results
 
-embed_model_id = "google/embeddinggemma-300m" # nazwa modelu
+embed_model_id = "intfloat/multilingual-e5-large-instruct" # nazwa modelu
 model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
