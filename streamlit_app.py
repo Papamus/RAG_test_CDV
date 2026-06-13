@@ -57,7 +57,7 @@ with st.expander("Show file uploader"):
             if uploaded_file.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
-                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state.documents_db):
+                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state["documents_db"]):
                     
                     with st.spinner(f"Przetwarzanie {uploaded_file.name}..."):
                         try:
