@@ -14,13 +14,13 @@ class FAISSIndex:
             results.append(self.metadata[idx])
         return results
 
-embed_model_id = "intfloat/multilingual-e5-base" # nazwa modelu
+embed_model_id = "intfloat/e5-small-v2" # nazwa modelu
 model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
-    embeddings = HuggingFaceEmbeddings(model_name = embed_model_id) # załadowanie modelu embeddingowego
-    texts = [doc.content for doc in documents] # wartości tekstowe wszystkich dokumentów
-    metadata = [{"filename": doc["file_name"], "text": doc["content"]} for doc in documents]
+    embeddings = HuggingFaceEmbeddings(model_name = embed_model_id, model_kwargs=model_kwargs) # załadowanie modelu embeddingowego
+    texts = [doc["text"] for doc in documents] # wartości tekstowe wszystkich dokumentów
+    metadata = documents
     embeddings_matrix = [embeddings.embed_query(text) for text in texts]
     embeddings_matrix = np.array(embeddings_matrix).astype("float32")
 
