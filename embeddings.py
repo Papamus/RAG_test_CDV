@@ -1,4 +1,4 @@
-import faiss
+import faiss as fa
 import numpy as np
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -25,7 +25,7 @@ def create_index(documents):
     embeddings_matrix = np.array(embeddings_matrix).astype("float32")
 
     matrix_dim = embeddings_matrix.shape[1]
-    index = faiss.IndexFlatL2(matrix_dim)# ustawienie indeksu przeszukwania
+    index = fa.IndexFlatL2(matrix_dim)# ustawienie indeksu przeszukwania
     index.add(embeddings_matrix)
 
     return FAISSIndex(index, metadata)

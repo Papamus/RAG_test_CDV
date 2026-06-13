@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import faiss
 from io import StringIO
 from openai import OpenAI
 from docloader import load_pdf, load_docs_from_folder
