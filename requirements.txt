@@ -5,3 +5,12 @@ pymupdf
 faiss-cpu
 langchain_huggingface
 sentence-transformers
+langchain
+langchain_core
+langchain_openai
+numpy
+pydantic
+PyMuPDF
+pytest
+tiktoken
+watchdog
