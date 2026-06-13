@@ -3,6 +3,7 @@ import pandas as pd
 from io import StringIO
 from openai import OpenAI
 from docloader import load_pdf, load_docs_from_folder
+from embeddings import create_index, retrieve_docs
 import os
 
 st.set_page_config(layout="wide", page_title="Gemini chatbot app")
@@ -57,6 +58,7 @@ with st.expander("Show file uploader"):
                         try:
                             # Wywołanie funkcji z drugiego pliku
                             pdf_text = load_pdf(uploaded_file)
+                            file_index = create_index(uploaded_file)
                             
                             # Dodanie do historii sesji
                             st.session_state.messages.append({
