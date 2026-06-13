@@ -14,4 +14,3 @@ PyMuPDF
 pytest
 tiktoken
 watchdog
-chat_openrouter
