@@ -14,7 +14,7 @@ class FAISSIndex:
             results.append(self.metadata[idx])
         return results
 
-embed_model_id = "sentence-transformers/all-MiniLM-L6-v2" # nazwa modelu
+embed_model_id = "sentence-transformers/LaBSE" # nazwa modelu
 model_kwargs = {"device": "cpu", "trust_remote_code": True}
 
 def create_index(documents):
