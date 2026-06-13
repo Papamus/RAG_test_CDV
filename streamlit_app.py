@@ -64,7 +64,8 @@ with st.expander("Show file uploader"):
                             st.session_state.messages.append({
                                 "role": "system",
                                 "content": f"Context from {uploaded_file.name}: {pdf_text}",
-                                "file_name": uploaded_file.name
+                                "file_name": uploaded_file.name,
+                                "file_index": f"File index: {file_index}"
                             })
                             st.success(f"Dodano: {uploaded_file.name}")
                         except Exception as e:
