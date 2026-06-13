@@ -2,4 +2,4 @@ openai
 streamlit
 pandas
 pymupdf
-faiss
+faiss-cpu
