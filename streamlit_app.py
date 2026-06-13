@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from io import StringIO
 from openai import OpenAI
-from docloader import load_pdf, load_docs_from_folder
+from docloader import load_pdf, load_docs_from_folder, chunk_text
 from embeddings import create_index, retrieve_docs
 import os
 
@@ -18,6 +18,10 @@ selected_model = "gemini-2.5-flash"
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+if "documents_db" not in st.session_state:
+    st.session_state["documents_db"] = []  # Tu zbieramy czyste słowniki z chunkami
+if "faiss_index" not in st.session_state:
+    st.session_state["faiss_index"] = None  # Tu ląduje obiekt indeksu FAISS
 
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
@@ -48,25 +52,27 @@ with st.expander("Show file uploader"):
     )
 
     if file_uploader:
+        new_files_added = False
         for uploaded_file in file_uploader:
             if uploaded_file.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
-                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state.messages):
+                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state.documents_db):
                     
                     with st.spinner(f"Przetwarzanie {uploaded_file.name}..."):
                         try:
                             # Wywołanie funkcji z drugiego pliku
                             pdf_text = load_pdf(uploaded_file)
-                            file_index = create_index(uploaded_file)
+                            text_chunks = chunk_text(pdf_text, chunk_size=500, chunk_overlap=100)
                             
                             # Dodanie do historii sesji
-                            st.session_state.messages.append({
-                                "role": "system",
-                                "content": f"Context from {uploaded_file.name}: {pdf_text}",
-                                "file_name": uploaded_file.name,
-                                "file_index": f"File index: {file_index}"
-                            })
+
+                            for idx, chunk in enumerate(text_chunks):
+                                st.session_state.messages.append({
+                                    "role": "system",
+                                    "file_name": f"{uploaded_file.name} (cz. {idx+1})",
+                                    "content": f"Context from {uploaded_file.name}: {chunk}",
+                                })
                             st.success(f"Dodano: {uploaded_file.name}")
                         except Exception as e:
                             st.error(f"Błąd pliku {uploaded_file.name}: {e}")
@@ -74,10 +80,28 @@ with st.expander("Show file uploader"):
             elif uploaded_file.name.lower().endswith((".jpg", ".png", ".xlsx")):
                 st.info(f"Plik {uploaded_file.name} wykryty, ale obsługa PDF jest priorytetem.")
 
+        if new_files_added:
+            with st.spinner("Generowanie embeddingów i aktualizacja bazy wektorowej..."):
+                try:
+                    st.session_state["faiss_index"] = create_index(st.session_state["documents_db"])
+                    st.success("Baza wiedzy została pomyślnie zaembedowana i zindeksowana")
+                except Exception as e:
+                    st.error(f"Błąd podczas tworzenia indeksu wektorowego: {e}")
+
 # Podgląd tego, co siedzi w sesji
-if st.session_state.messages:
-    st.write("Zawartość sesji (Skrót):")
-    for item in st.session_state.messages:
-        if "file_name" in item:
-            st.text(f"{item['file_name']}: {item['content'][:100]}...")
+tab1, tab2 = st.tabs(["Historia czatu", "Baza dokumentów"])
+with tab1:
+    if st.session_state.messages:
+        st.write("Zawartość sesji (Skrót):")
+        for item in st.session_state.messages:
+            if "file_name" in item:
+                st.text(f"{item['file_name']}: {item['content'][:100]}...")
+
+with tab2:
+    if st.session_state["documents_db"]:
+        for item in st.session_state["documents_db"]:
+            # Wyświetlamy nazwę chunka i jego początek
+            st.text(f"📄 {item['file_name']}: {item['content'][:100]}...")
+    else:
+        st.info("Baza wiedzy jest pusta. Wgraj pliki PDF, aby wygenerować wektory.")
 
