@@ -57,8 +57,8 @@ with st.expander("Show file uploader"):
             if uploaded_file.name.lower().endswith(".pdf"):
                 
                 # Unikamy duplikowania tych samych plików w sesji
-                if not any(msg.get("file_name") == uploaded_file.name for msg in st.session_state["documents_db"]):
-                    
+                if not any(d.get("file_name", "").startswith(uploaded_file.name) for d in st.session_state["documents_db"]):
+
                     with st.spinner(f"Przetwarzanie {uploaded_file.name}..."):
                         try:
                             # Wywołanie funkcji z drugiego pliku
@@ -68,11 +68,12 @@ with st.expander("Show file uploader"):
                             # Dodanie do historii sesji
 
                             for idx, chunk in enumerate(text_chunks):
-                                st.session_state.messages.append({
+                                st.session_state["documents_db"].append({
                                     "role": "system",
                                     "file_name": f"{uploaded_file.name} (cz. {idx+1})",
                                     "content": f"Context from {uploaded_file.name}: {chunk}",
                                 })
+                            new_files_added = True
                             st.success(f"Dodano: {uploaded_file.name}")
                         except Exception as e:
                             st.error(f"Błąd pliku {uploaded_file.name}: {e}")
