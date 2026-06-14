@@ -157,7 +157,7 @@ Answer:
 
 # Funkcja pomocnicza generująca odpowiedź z kontekstem RAG przy użyciu LangChain LCEL
 def answer_question(question, documents, model):
-    context = "\n\n".join([f"Source: {doc['filename']}\nContent: {doc['content']}" for doc in documents])
+    context = "\n\n".join([f"Source: {doc['file_name']}\nContent: {doc['content']}" for doc in documents])
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | model
     return chain.invoke({"question": question, "context": context})

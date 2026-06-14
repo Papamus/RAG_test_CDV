@@ -2,6 +2,10 @@ import os
 import fitz
 
 def load_pdf(doc_file):
+    doc_file.seek(0)
+    # ustawiam kursor na początek pliku (bajt 0) - jeeli znowu wt danej sesji zostanie wczytany dokument
+    # przez doc_file.read, python zacznie czytac od miejsca w ktorym byl kursor, czyli 
+
     doc_bytes = doc_file.read()
     doc = fitz.open(stream=doc_bytes, filetype="pdf")
     text = ""
@@ -14,10 +18,10 @@ def load_docs_from_folder(folder_path):
     documents = []
     for filename in os.listdir(folder_path):
         if filename.endswith(".pdf"):
-            text = load_pdf(os.path.join(folder_path, filename))
-        with open(full_path, "rb") as f:
+            full_path = os.path.join(folder_path, filename) # Definicja full_path
+            with open(full_path, "rb") as f:
                 text = load_pdf(f)
-                documents.append({"file_name": filename, "content": text})
+            documents.append({"file_name": filename, "content": text})
     return documents
 
 # robimy chunki zeby mozna bylo przetworzyc duze dokumenty
