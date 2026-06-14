@@ -1,5 +1,6 @@
 import faiss
 import numpy as np
+import streamlit as st
 from langchain_huggingface import HuggingFaceEmbeddings
 
 class FAISSIndex:
