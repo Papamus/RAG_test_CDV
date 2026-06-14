@@ -39,6 +39,6 @@ def retrieve_docs(query, faiss_index, k=3):
     embeddings = get_embedding_model() # załadowanie modelu embeddingowego
 
     formatted_query = f"query: {query}"
-    query_embedding = np.array([embeddings.embed_query(formatted_query)]).astype("float32") # embeddowanie zapytania (query)
+    query_embedding = np.array([embeddings.embed_query(formatted_query)], dtype="float32")
     results = faiss_index.similarity_search(query_embedding, k=k) # zwrócenie wyników przeuszkiwania
     return results
