@@ -127,7 +127,7 @@ with st.popover("Basic chatbot info"):
 # Pobieramy dane z st.secrets (zgodnie z Twoim oryginalnym kodem)
 api_key = st.secrets["API_KEY"] 
 base_url = st.secrets["BASE_URL"]
-selected_model = "google/gemini-2.5-flash"  # Pełna nazwa modelu dla OpenRouter
+selected_model = "gemini-2.5-flash"  # Pełna nazwa modelu dla OpenRouter
 
 # Inicjalizacja modelu za pomocą klasy ChatOpenRouter
 model = ChatOpenRouter(
