@@ -1,6 +1,5 @@
 import os
 import fitz
-reader = easyocr.Reader(['pl', 'en'], gpu=False)  # Inicjalizacja czytnika OCR dla języka polskiego
 
 def load_pdf(doc_file):
     doc_file.seek(0)
