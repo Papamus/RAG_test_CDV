@@ -110,24 +110,25 @@ import os
 import shutil
 from chat_openrouter import ChatOpenRouter
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 # Importy z Twoich modułów pomocniczych
 from docloader import load_pdf, chunk_text
 from embeddings import create_index, retrieve_docs
 
-st.set_page_config(layout="wide", page_title="Gemini RAG Chatbot")
-st.title("Gemini RAG Chatbot app")
+st.set_page_config(layout="wide", page_title="D&D RAG Chatbot App")
+st.title("D&D RAG Chatbot app")
 
-# --- POP-OVER INFO ---
 with st.popover("Basic chatbot info"):
-    st.text("Chatbot made for explaining D&D rules via OpenRouter & LangChain!")
+    st.text("Chatbot made for explaining D&D rules via OpenRouter & LangChain! Also provides a simple story that user can play")
     st.checkbox("Got it!")
 
-# --- KONFIGURACJA SEKRETÓW I MODELU ---
-# Pobieramy dane z st.secrets (zgodnie z Twoim oryginalnym kodem)
+# MODE SELECTOR - Allows switching between regular RAG assistant and story mode
+app_mode = st.radio("Choose Mode:", ["D&D Assistant", "Story Mode"], horizontal=True)
+
 api_key = st.secrets["API_KEY"] 
 base_url = st.secrets["BASE_URL"]
-selected_model = "gemini-2.5-flash"  # Pełna nazwa modelu dla OpenRouter
+selected_model = "gemini-2.5-flash" 
 
 # Inicjalizacja modelu za pomocą klasy ChatOpenRouter
 model = ChatOpenRouter(
@@ -136,35 +137,54 @@ model = ChatOpenRouter(
     model_name=selected_model
 )
 
-# --- FOLDER NA PLIKI ---
 UPLOAD_FOLDER = "data/uploaded_pdfs"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# --- SZABLON PROMPTU (LANGCHAIN) ---
-template = """
+# Szablon asystenta
+assistant_template = """
 You are a helpful D&D rules expert assistant.
 Use the following pieces of context extracted from official rulebooks to answer the user's question.
 If you don't know the answer or if it's not in the context, use your general knowledge but mention that it wasn't found in the uploaded documents.
 
 Context: 
 {context}
-
-Question: 
-{question}
-
-Answer:
 """
 
-# Funkcja pomocnicza generująca odpowiedź z kontekstem RAG przy użyciu LangChain LCEL
-def answer_question(question, documents, model):
-    context = "\n\n".join([f"Source: {doc['file_name']}\nContent: {doc['content']}" for doc in documents])
-    prompt = ChatPromptTemplate.from_template(template)
-    chain = prompt | model
-    return chain.invoke({"question": question, "context": context})
+# Szablon Mistrza Gry
+story_template = """
+You are a Dungeon Master leading a short, interactive D&D adventure for one player. 
+Describe the environment, react to the player's choices, and ask them what they want to do next. 
+Use the context below if the player asks for rule clarifications during the story.
 
-# --- INICJALIZACJA STANÓW SESJI ---
+Context:
+{context}
+"""
+
+
+
+# Funkcja pomocnicza generująca odpowiedź z kontekstem i historią
+def answer_question(messages, documents, model, template_text):
+    context = ""
+    if documents:
+        context = "\n\n".join([f"Source: {doc['file_name']}\nContent: {doc['content']}" for doc in documents])
+    else:
+        context = "Brak wgrywanych dokumentów w bazie wiedzy."
+        
+    system_prompt = template_text.format(context=context, question="")
+    
+    # Przekształć słowniki sesji na obiekty langchain
+    langchain_messages = [SystemMessage(content=system_prompt)]
+    for msg in messages:
+        if msg["role"] == "user":
+            langchain_messages.append(HumanMessage(content=msg["content"]))
+        elif msg["role"] == "assistant":
+            langchain_messages.append(AIMessage(content=msg["content"]))
+            
+    return model.invoke(langchain_messages)
+
+# Stany sesji
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you dear Player?"}]
 if "documents_db" not in st.session_state:
     st.session_state["documents_db"] = []
 if "faiss_index" not in st.session_state:
@@ -174,40 +194,39 @@ if "clear_files" not in st.session_state:
 if "retrieve_files" not in st.session_state:
     st.session_state.retrieve_files = False
 
-# --- PASEK BOCZNY: ZARZĄDZANIE PLIKAMI ---
-st.sidebar.header("Zarządzanie dokumentami")
-uploaded_files = st.sidebar.file_uploader("Ładuj PDF(y)", type=["pdf"], accept_multiple_files=True, key="file_uploader")
 
-if st.sidebar.button("Usuń pliki"):
-    shutil.rmtree(UPLOAD_FOLDER)
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    st.session_state.documents_db = []
-    st.session_state.faiss_index = None
-    st.session_state.clear_files = True
-    st.session_state.retrieve_files = False
-    st.sidebar.success("Pliki i indeks wyczyszczone")
-    st.rerun()
+with st.expander("Zarządzanie dokumentami (Wgraj zasady D&D)", expanded=False):
+    uploaded_files = st.file_uploader("Ładuj PDF(y)", type=["pdf"], accept_multiple_files=True, key="file_uploader")
+
+    if st.button("Usuń pliki"):
+        if os.path.exists(UPLOAD_FOLDER):
+            shutil.rmtree(UPLOAD_FOLDER)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        st.session_state.documents_db = []
+        st.session_state.faiss_index = None
+        st.session_state.clear_files = True
+        st.session_state.retrieve_files = False
+        st.success("Pliki i indeks wyczyszczone")
+        st.rerun()
 
 if st.session_state.clear_files:
     uploaded_files = None
     st.session_state.clear_files = False
 
-# --- PRZETWARZANIE WGRANYCH PLIKÓW ---
+# Przetwarzanie wgranych plików PDF
 if uploaded_files:
     new_files_added = False
     for uploaded_file in uploaded_files:
-        # 1. Zapisujemy fizycznie plik na dysku serwera (zgodnie z nowym wzorcem)
         file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.name)
         if not os.path.exists(file_path):
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
-        # 2. Unikamy duplikacji w naszej bazie obiektów w pamięci podręcznej RAM
         if not any(d.get("file_name", "").startswith(uploaded_file.name) for d in st.session_state["documents_db"]):
-            with st.sidebar.spinner(f"Przetwarzanie {uploaded_file.name}..."):
+            with st.spinner(f"Przetwarzanie {uploaded_file.name}..."):
                 try:
                     pdf_text = load_pdf(uploaded_file)
-                    text_chunks = chunk_text(pdf_text, chunk_size=500, chunk_overlap=100)
+                    text_chunks = chunk_text(pdf_text, chunk_size=1000, chunk_overlap=200)
                     
                     for idx, chunk in enumerate(text_chunks):
                         st.session_state["documents_db"].append({
@@ -216,52 +235,59 @@ if uploaded_files:
                         })
                     new_files_added = True
                 except Exception as e:
-                    st.sidebar.error(f"Błąd pliku {uploaded_file.name}: {e}")
+                    st.error(f"Błąd pliku {uploaded_file.name}: {e}")
 
-    # 3. Jeśli doszły nowe pliki, przeliczamy indeks FAISS
     if new_files_added:
-        with st.sidebar.spinner("Aktualizacja indeksu FAISS..."):
+        with st.spinner("Aktualizacja indeksu FAISS..."):
             try:
                 st.session_state["faiss_index"] = create_index(st.session_state["documents_db"])
                 st.session_state.retrieve_files = True
-                st.sidebar.success("Pliki przeliczone i dodane do FAISS!")
+                st.success("Pliki przeliczone i dodane do FAISS!")
                 st.rerun()
             except Exception as e:
-                st.sidebar.error(f"Błąd indeksowania: {e}")
+                st.error(f"Błąd indeksowania: {e}")
 
-# --- HISTORIA CZATU (WIDOK) ---
+# Wyświetlanie historii czatu
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-# --- OBSŁUGA CZATU ---
+# Obsługa wejścia użytkownika i generowanie odpowiedzi
 if question := st.chat_input():
     st.session_state.messages.append({"role": "user", "content": question})
     st.chat_message("user").write(question)
     
+    active_template = story_template if app_mode == "Story Mode" else assistant_template
+    used_files = []
+
     # Przeszukiwanie bazy i generowanie odpowiedzi
     if st.session_state.retrieve_files and st.session_state["faiss_index"] is not None:
         with st.spinner("Przeszukiwanie bazy wiedzy..."):
-            # Pobieramy pasujące dokumenty przy użyciu Twojej funkcji
             related_documents = retrieve_docs(question, st.session_state["faiss_index"], k=3)
             
-            # Generujemy odpowiedź przez łańcuch LangChain z kontekstem RAG
-            ai_response = answer_question(question, related_documents, model)
+            ai_response = answer_question(st.session_state.messages, related_documents, model, active_template)
             answer_content = ai_response.content
+            
+            # Zapisujemy użyte źródła dokumentów (usuwamy "(cz. index)" by mieć tylko nazwy oryginalnych plików)
+            used_files = list(set([doc['file_name'].split(' (cz.')[0] for doc in related_documents]))
     else:
-        # Zwykłe wywołanie modelu, gdy baza dokumentów jest pusta
-        ai_response = model.invoke(st.session_state.messages)
+        # Jeśli nie ma dokumentów, generujemy odpowiedź bez kontekstu
+        ai_response = answer_question(st.session_state.messages, [], model, active_template)
         answer_content = ai_response.content
+
+    # Dodajemy powiadomienie o źródłach na koniec wiadomości jeśli korzystaliśmy z bazy
+    if used_files:
+        answer_content += f"\n\n---\n**📚 Użyte źródła RAG:** {', '.join(used_files)}"
 
     # Zapis i wyświetlenie odpowiedzi asystenta
     st.session_state.messages.append({"role": "assistant", "content": answer_content})
     st.chat_message("assistant").write(answer_content)
 
 
-# --- SEKCJA PODGLĄDU NA SAMYM DOLE ---
+# Wyświetlanie załadowanych dokumentów w bazie wiedzy
 st.write("---")
-st.subheader("Załadowane fragmenty w bazie wiedzy (FAISS):")
-if st.session_state["documents_db"]:
-    for item in st.session_state["documents_db"]:
-        st.text(f"🔹 {item['file_name']}: {item['content'][:100]}...")
-else:
-    st.info("Baza wiedzy jest pusta.")
+with st.expander("Załadowane fragmenty w bazie wiedzy (FAISS):"):
+    if st.session_state["documents_db"]:
+        for item in st.session_state["documents_db"]:
+            st.text(f"🔹 {item['file_name']}: {item['content'][:100]}...")
+    else:
+        st.info("Baza wiedzy jest pusta.")

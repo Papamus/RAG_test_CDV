@@ -3,8 +3,7 @@ import fitz
 
 def load_pdf(doc_file):
     doc_file.seek(0)
-    # ustawiam kursor na początek pliku (bajt 0) - jeeli znowu wt danej sesji zostanie wczytany dokument
-    # przez doc_file.read, python zacznie czytac od miejsca w ktorym byl kursor, czyli 
+    # ustawiam kursor na początek pliku, aby upewnić się, że odczytujemy cały plik PDF
 
     doc_bytes = doc_file.read()
     doc = fitz.open(stream=doc_bytes, filetype="pdf")
@@ -26,7 +25,7 @@ def load_docs_from_folder(folder_path):
 
 # robimy chunki zeby mozna bylo przetworzyc duze dokumenty
 # chunk_size - rozmiar chunka, chunk_overlap - ile zapamietuje z poprzedniego chunka, dobre do kontekstu
-def chunk_text(text, chunk_size=500, chunk_overlap=100):
+def chunk_text(text, chunk_size, chunk_overlap):
     chunks = []
     start_chunk = 0
     while start_chunk < len(text):
