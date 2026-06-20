@@ -14,5 +14,3 @@ PyMuPDF
 pytest
 tiktoken
 watchdog
-easyocr
-Pillow
