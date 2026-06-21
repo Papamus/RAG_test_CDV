@@ -30,7 +30,7 @@ if st.session_state.current_mode != app_mode:
 
 api_key = st.secrets["API_KEY"] 
 base_url = st.secrets["BASE_URL"]
-selected_model = "gemini-3-flash" 
+selected_model = "gemini-3.0-flash" 
 
 # Inicjalizacja modelu za pomocą klasy ChatOpenRouter
 model = ChatOpenRouter(
