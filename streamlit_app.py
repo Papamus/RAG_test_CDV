@@ -5,7 +5,6 @@ from chat_openrouter import ChatOpenRouter
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
-# Importy z Twoich modułów pomocniczych
 from docloader import load_pdf, chunk_text
 from embeddings import create_index, retrieve_docs
 
@@ -31,7 +30,7 @@ if st.session_state.current_mode != app_mode:
 
 api_key = st.secrets["API_KEY"] 
 base_url = st.secrets["BASE_URL"]
-selected_model = "gemini-2.5-flash" 
+selected_model = "gemini-3-flash" 
 
 # Inicjalizacja modelu za pomocą klasy ChatOpenRouter
 model = ChatOpenRouter(
