@@ -16,8 +16,18 @@ with st.popover("Basic chatbot info"):
     st.text("Chatbot made for explaining D&D rules via OpenRouter & LangChain! Also provides a simple story that user can play")
     st.checkbox("Got it!")
 
-# MODE SELECTOR - Allows switching between regular RAG assistant and story mode
+if "current_mode" not in st.session_state:
+    st.session_state.current_mode = "D&D Assistant"
+
 app_mode = st.radio("Choose Mode:", ["D&D Assistant", "Story Mode"], horizontal=True)
+
+if st.session_state.current_mode != app_mode:
+    st.session_state.current_mode = app_mode
+    if app_mode == "Story Mode":
+        st.session_state["messages"] = [{"role": "assistant", "content": "What character are you playing? Choose the race: Human, Elf, Dwarf, Halfling, Dragonborn, Orc"}]
+    else:
+        st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you dear Player?"}]
+    st.rerun()
 
 api_key = st.secrets["API_KEY"] 
 base_url = st.secrets["BASE_URL"]
@@ -46,8 +56,15 @@ Context:
 # Szablon Mistrza Gry
 story_template = """
 You are a Dungeon Master leading a short, interactive D&D adventure for one player. 
-Describe the environment, react to the player's choices, and ask them what they want to do next. 
-Use the context below if the player asks for rule clarifications during the story.
+
+### ADVENTURE RULES:
+1. CHARACTER CREATION: The user will choose a race. Provide them with the race's characteristics based on your provided PDF context. If it's not in the context, use your base knowledge but kindly inform the player that the source wasn't found in the documents. Guide them to complete their class and basic stats. Do not start the adventure until character creation is fully complete.
+2. THE PLOT: Make up a short story involving a robbery and escaping from a location. Randomize the setting entirely (e.g., a medieval castle, a sand village, a localized mansion in another world). Ensure the setting and architecture make narrative sense.
+3. THE GOAL: The player's main objective is to obtain the "Golden Turtle". You must creatively invent what this Golden Turtle is, why it is golden, and its significance depending on the specific location and story.
+4. GAMEPLAY: The scenario should involve sneaking around, interacting with random NPCs and objects, and potentially fighting. Call for appropriate D&D skill checks (e.g. Stealth, Perception, standard combat) and apply D&D rules correctly.
+5. ENDINGS: The adventure ends in success if the player obtains the Golden Turtle and escapes. It ends in failure if the player is defeated or captured. 
+
+Describe the environment, react to the player's choices, and ask them what they want to do next. Use the context below if the player asks for rule clarifications or when verifying traits during character creation.
 
 Context:
 {context}
@@ -77,7 +94,10 @@ def answer_question(messages, documents, model, template_text):
 
 # Stany sesji
 if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you dear Player?"}]
+    if st.session_state.current_mode == "Story Mode":
+        st.session_state["messages"] = [{"role": "assistant", "content": "What character are you playing? Choose the race: Human, Elf, Dwarf, Halfling, Dragonborn, Orc"}]
+    else:
+        st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you dear Player?"}]
 if "documents_db" not in st.session_state:
     st.session_state["documents_db"] = []
 if "faiss_index" not in st.session_state:
